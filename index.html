@@ -886,6 +886,18 @@ async function guardarCotizacion() {
 Guardar en base de datos
 </button>
 
+<script>
+async function guardarCotizacion(){
+  alert("Botón funcionando");
+
+  const { data, error } = await supabaseClient
+    .from('pedidos')
+    .insert([{cliente:"Test"}]);
+
+  console.log(data, error);
+}
+</script>
+
 </body>
 
 </html>
