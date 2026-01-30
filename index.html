@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Pedidos</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,6 +57,18 @@
     .table-row:hover {
       background-color: #f8fafc;
     }
+    .spinner {
+      border: 3px solid #f3f4f6;
+      border-top: 3px solid #dc2626;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -86,17 +99,17 @@
      <section class="card p-6 mb-6">
       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-600">👤</span> Datos del Cliente</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-       <div><label class="block text-sm font-medium text-slate-600 mb-1">Nombre del Cliente *</label> <input type="text" id="cliente-nombre" placeholder="Juan Pérez" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div><label for="cliente-nombre" class="block text-sm font-medium text-slate-600 mb-1">Nombre del Cliente *</label> <input type="text" id="cliente-nombre" placeholder="Juan Pérez" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
        </div>
-       <div><label class="block text-sm font-medium text-slate-600 mb-1">Nombre del Negocio</label> <input type="text" id="cliente-negocio" placeholder="Tienda La Bendición" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div><label for="cliente-negocio" class="block text-sm font-medium text-slate-600 mb-1">Nombre del Negocio</label> <input type="text" id="cliente-negocio" placeholder="Tienda La Bendición" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
        </div>
-       <div><label class="block text-sm font-medium text-slate-600 mb-1">NIT</label> <input type="text" id="cliente-nit" placeholder="1234567-8" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div><label for="cliente-nit" class="block text-sm font-medium text-slate-600 mb-1">NIT</label> <input type="text" id="cliente-nit" placeholder="1234567-8" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
        </div>
-       <div><label class="block text-sm font-medium text-slate-600 mb-1">Teléfono *</label> <input type="tel" id="cliente-telefono" placeholder="+502 5555-5555" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div><label for="cliente-telefono" class="block text-sm font-medium text-slate-600 mb-1">Teléfono *</label> <input type="tel" id="cliente-telefono" placeholder="+502 5555-5555" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
        </div>
-       <div class="md:col-span-2"><label class="block text-sm font-medium text-slate-600 mb-1">Dirección</label> <input type="text" id="cliente-direccion" placeholder="Zona 1, Ciudad de Guatemala" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div class="md:col-span-2"><label for="cliente-direccion" class="block text-sm font-medium text-slate-600 mb-1">Dirección</label> <input type="text" id="cliente-direccion" placeholder="Zona 1, Ciudad de Guatemala" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
        </div>
-       <div><label class="block text-sm font-medium text-slate-600 mb-1">No. de Orden *</label> <input type="text" id="numero-orden" placeholder="001" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div><label for="numero-orden" class="block text-sm font-medium text-slate-600 mb-1">No. de Orden *</label> <input type="text" id="numero-orden" placeholder="001" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
        </div>
       </div>
      </section><!-- Tabla de Productos -->
@@ -134,7 +147,7 @@
         <p class="text-sm text-slate-500 mb-1">Total del Pedido</p>
         <p id="total-general" class="text-3xl font-bold text-slate-800">Q 0.00</p>
        </div>
-       <div class="flex flex-wrap gap-3 justify-center"><button onclick="limpiarPedido()" class="btn-secondary px-5 py-3 rounded-xl text-slate-600 border border-slate-200 font-medium flex items-center gap-2"> 🗑️ Limpiar </button> <button onclick="guardarPedido()" id="btn-guardar" class="btn-secondary px-5 py-3 rounded-xl text-emerald-600 border border-emerald-200 bg-emerald-50 font-medium flex items-center gap-2"> 💾 Guardar </button> <button onclick="generarPDF()" class="btn-primary px-5 py-3 rounded-xl text-white font-medium flex items-center gap-2"> 📄 Generar PDF </button>
+       <div class="flex flex-wrap gap-3 justify-center"><button onclick="limpiarPedido()" class="btn-secondary px-5 py-3 rounded-xl text-slate-600 border border-slate-200 font-medium flex items-center gap-2"> 🗑️ Limpiar </button> <button onclick="guardarPedido()" id="btn-guardar" class="btn-secondary px-5 py-3 rounded-xl text-emerald-600 border border-emerald-200 bg-emerald-50 font-medium flex items-center gap-2"> <span id="guardar-spinner" class="spinner hidden"></span> <span id="guardar-text">💾 Guardar</span> </button> <button onclick="generarPDF()" class="btn-primary px-5 py-3 rounded-xl text-white font-medium flex items-center gap-2"> 📄 Generar PDF </button>
        </div>
       </div>
      </section>
@@ -152,6 +165,10 @@
        <p>No hay pedidos guardados</p>
        <p class="text-sm">Los pedidos que guardes aparecerán aquí</p>
       </div>
+      <div id="loading-historial" class="text-center py-12">
+       <div class="spinner mx-auto mb-3" style="width: 40px; height: 40px; border-width: 4px;"></div>
+       <p class="text-slate-500">Cargando pedidos...</p>
+      </div>
      </section>
     </div>
    </main><!-- Modal Confirmación -->
@@ -159,7 +176,7 @@
     <div class="bg-white rounded-2xl p-6 max-w-sm w-full">
      <h3 id="modal-title" class="text-lg font-semibold text-slate-800 mb-2">Confirmar acción</h3>
      <p id="modal-message" class="text-slate-600 mb-6">¿Estás seguro?</p>
-     <div class="flex gap-3"><button onclick="closeModal()" class="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium">Cancelar</button> <button id="modal-confirm-btn" class="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white font-medium">Eliminar</button>
+     <div class="flex gap-3"><button onclick="closeModal()" class="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium">Cancelar</button> <button id="modal-confirm-btn" class="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white font-medium flex items-center justify-center gap-2"> <span id="delete-spinner" class="spinner hidden" style="width: 16px; height: 16px; border-width: 2px;"></span> <span id="delete-text">Eliminar</span> </button>
      </div>
     </div>
    </div><!-- Modal Detalle Pedido -->
@@ -175,9 +192,15 @@
    </div>
   </div>
   <script>
+    // ============ CONFIGURACIÓN SUPABASE ============
+    const SUPABASE_URL = 'https://ryaawzodxtvcfvxphkgf.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5YWF3em9keHR2Y2Z2eHBoa2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzkyNTUsImV4cCI6MjA4NTM1NTI1NX0.bP3opRjM4639oAa3X0xoGh5i86r1mtRmq_wQ2s_dv0w';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
     // ============ CONFIGURACIÓN ============
     const defaultConfig = {
-      empresa_nombre: 'Detalles Kairos',
+      empresa_nombre: 'Importadora Kairos',
       empresa_telefono: '3946-8391',
       empresa_direccion: 'Calzada Atanasio Tzul, zona 12, Plaza Atanasio Tzul, local 54'
     };
@@ -189,20 +212,90 @@
     let currentDetailPedido = null;
 
     // ============ INICIALIZACIÓN ============
-    function init() {
-      // Cargar datos de localStorage
-      const stored = localStorage.getItem('pedidos_historial');
-      if (stored) {
-        try {
-          historialPedidos = JSON.parse(stored);
-        } catch (e) {
-          historialPedidos = [];
-        }
-      }
-
+    async function init() {
       renderProductos();
       updateTotal();
-      renderHistorial();
+      await cargarHistorialDesdeSupabase();
+    }
+
+    // ============ SUPABASE FUNCIONES ============
+    async function cargarHistorialDesdeSupabase() {
+      const loadingEl = document.getElementById('loading-historial');
+      const listaEl = document.getElementById('historial-lista');
+      const sinHistorialEl = document.getElementById('sin-historial');
+
+      try {
+        loadingEl.classList.remove('hidden');
+        listaEl.innerHTML = '';
+        sinHistorialEl.classList.add('hidden');
+
+        const { data, error } = await supabase
+          .from('pedidos')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        loadingEl.classList.add('hidden');
+
+        if (error) throw error;
+
+        historialPedidos = data.map(pedido => ({
+          id: pedido.id,
+          fecha: pedido.created_at,
+          cliente_nombre: pedido.cliente_nombre,
+          cliente_negocio: pedido.cliente_negocio,
+          cliente_nit: pedido.cliente_nit,
+          cliente_telefono: pedido.cliente_telefono,
+          cliente_direccion: pedido.cliente_direccion,
+          numero_orden: pedido.numero_orden,
+          productos: pedido.productos,
+          total: parseFloat(pedido.total)
+        }));
+
+        renderHistorial();
+      } catch (error) {
+        loadingEl.classList.add('hidden');
+        console.error('Error al cargar historial:', error);
+        showToast('Error al cargar pedidos desde la base de datos', 'error');
+      }
+    }
+
+    async function guardarPedidoEnSupabase(pedidoData) {
+      try {
+        const { data, error } = await supabase
+          .from('pedidos')
+          .insert([{
+            numero_orden: pedidoData.numero_orden,
+            cliente_nombre: pedidoData.cliente_nombre,
+            cliente_negocio: pedidoData.cliente_negocio,
+            cliente_nit: pedidoData.cliente_nit,
+            cliente_telefono: pedidoData.cliente_telefono,
+            cliente_direccion: pedidoData.cliente_direccion,
+            productos: pedidoData.productos,
+            total: pedidoData.total
+          }])
+          .select();
+
+        if (error) throw error;
+        return { success: true, data: data[0] };
+      } catch (error) {
+        console.error('Error al guardar pedido:', error);
+        return { success: false, error };
+      }
+    }
+
+    async function eliminarPedidoDeSupabase(pedidoId) {
+      try {
+        const { error } = await supabase
+          .from('pedidos')
+          .delete()
+          .eq('id', pedidoId);
+
+        if (error) throw error;
+        return { success: true };
+      } catch (error) {
+        console.error('Error al eliminar pedido:', error);
+        return { success: false, error };
+      }
     }
 
     // ============ VISTA ============
@@ -226,6 +319,7 @@
         btnHistorial.classList.remove('text-slate-600', 'border-slate-200');
         btnNuevo.classList.remove('bg-red-50', 'text-red-600', 'border-red-200');
         btnNuevo.classList.add('text-slate-600', 'border-slate-200');
+        cargarHistorialDesdeSupabase();
       }
     }
 
@@ -234,7 +328,6 @@
       document.getElementById('empresa-telefono-display').textContent = config.empresa_telefono;
     }
 
-    // Inicializar empresa display
     updateEmpresaDisplay();
 
     // ============ PRODUCTOS ============
@@ -266,7 +359,6 @@
           producto[campo] = valor;
         }
         updateTotal();
-        // Actualizar solo el total de la fila sin re-renderizar todo
         const totalElement = document.querySelector(`[data-total-id="${id}"]`);
         if (totalElement) {
           totalElement.textContent = `Q ${(producto.cantidad * producto.precio).toFixed(2)}`;
@@ -288,7 +380,6 @@
 
       sinProductos.classList.add('hidden');
 
-      // Renderizar tabla desktop
       tabla.innerHTML = productos.map(p => `
         <tr class="table-row border-b border-slate-100">
           <td class="py-3 px-4">
@@ -324,7 +415,6 @@
         </tr>
       `).join('');
 
-      // Renderizar cards mobile
       cards.innerHTML = productos.map(p => `
         <div class="bg-slate-50 rounded-xl p-4">
           <div class="flex justify-between items-start mb-3">
@@ -372,9 +462,8 @@
     }
 
     // ============ GUARDAR PEDIDO ============
-    function guardarPedido() {
+    async function guardarPedido() {
       const clienteNombre = document.getElementById('cliente-nombre').value.trim();
-      const clienteTelefono = document.getElementById('cliente-telefono').value.trim();
       const numeroOrden = document.getElementById('numero-orden').value.trim();
 
       if (!clienteNombre) {
@@ -392,25 +481,38 @@
         return;
       }
 
-      const pedido = {
-        id: Date.now().toString(),
-        fecha: new Date().toISOString(),
+      const btnGuardar = document.getElementById('btn-guardar');
+      const spinner = document.getElementById('guardar-spinner');
+      const text = document.getElementById('guardar-text');
+      
+      btnGuardar.disabled = true;
+      spinner.classList.remove('hidden');
+      text.textContent = 'Guardando...';
+
+      const pedidoData = {
+        numero_orden: numeroOrden,
         cliente_nombre: clienteNombre,
         cliente_negocio: document.getElementById('cliente-negocio').value.trim(),
         cliente_nit: document.getElementById('cliente-nit').value.trim(),
-        cliente_telefono: clienteTelefono,
+        cliente_telefono: document.getElementById('cliente-telefono').value.trim(),
         cliente_direccion: document.getElementById('cliente-direccion').value.trim(),
-        numero_orden: numeroOrden,
         productos: JSON.stringify(productos),
         total: productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0)
       };
 
-      historialPedidos.unshift(pedido);
-      localStorage.setItem('pedidos_historial', JSON.stringify(historialPedidos));
+      const result = await guardarPedidoEnSupabase(pedidoData);
       
-      showToast('Pedido guardado exitosamente', 'success');
-      renderHistorial();
-      limpiarPedido();
+      btnGuardar.disabled = false;
+      spinner.classList.add('hidden');
+      text.textContent = '💾 Guardar';
+
+      if (result.success) {
+        showToast('Pedido guardado exitosamente en Supabase', 'success');
+        await cargarHistorialDesdeSupabase();
+        limpiarPedido();
+      } else {
+        showToast('Error al guardar el pedido', 'error');
+      }
     }
 
     // ============ HISTORIAL ============
@@ -418,7 +520,9 @@
       const lista = document.getElementById('historial-lista');
       const sinHistorial = document.getElementById('sin-historial');
       const totalPedidos = document.getElementById('total-pedidos');
+      const loadingEl = document.getElementById('loading-historial');
 
+      loadingEl.classList.add('hidden');
       totalPedidos.textContent = `${historialPedidos.length} pedido${historialPedidos.length !== 1 ? 's' : ''}`;
 
       if (historialPedidos.length === 0) {
@@ -566,7 +670,6 @@
       document.getElementById('modal-message').textContent = '¿Estás seguro de eliminar este pedido? Esta acción no se puede deshacer.';
       document.getElementById('modal-confirm-btn').onclick = () => {
         if (pendingConfirmAction) pendingConfirmAction();
-        closeModal();
       };
       document.getElementById('modal-confirm').classList.remove('hidden');
       document.getElementById('modal-confirm').classList.add('flex');
@@ -578,11 +681,28 @@
       pendingConfirmAction = null;
     }
 
-    function eliminarPedido(pedidoId) {
-      historialPedidos = historialPedidos.filter(p => p.id !== pedidoId);
-      localStorage.setItem('pedidos_historial', JSON.stringify(historialPedidos));
-      renderHistorial();
-      showToast('Pedido eliminado', 'success');
+    async function eliminarPedido(pedidoId) {
+      const btnConfirm = document.getElementById('modal-confirm-btn');
+      const spinner = document.getElementById('delete-spinner');
+      const text = document.getElementById('delete-text');
+      
+      btnConfirm.disabled = true;
+      spinner.classList.remove('hidden');
+      text.textContent = 'Eliminando...';
+
+      const result = await eliminarPedidoDeSupabase(pedidoId);
+      
+      btnConfirm.disabled = false;
+      spinner.classList.add('hidden');
+      text.textContent = 'Eliminar';
+      closeModal();
+
+      if (result.success) {
+        showToast('Pedido eliminado de Supabase', 'success');
+        await cargarHistorialDesdeSupabase();
+      } else {
+        showToast('Error al eliminar el pedido', 'error');
+      }
     }
 
     // ============ LIMPIAR ============
@@ -621,15 +741,12 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      // Configuración
       const pageWidth = doc.internal.pageSize.getWidth();
       const margin = 20;
 
-      // Header con diseño de factura
       doc.setFillColor(220, 38, 38);
       doc.rect(0, 0, pageWidth, 50, 'F');
 
-      // Número de orden
       doc.setFillColor(255, 255, 255);
       doc.roundedRect(pageWidth - margin - 50, 10, 50, 12, 2, 2, 'F');
       doc.setFontSize(8);
@@ -637,7 +754,6 @@
       doc.setFont('helvetica', 'bold');
       doc.text(`Orden No. ${numeroOrden}`, pageWidth - margin - 25, 17, { align: 'center' });
 
-      // Nombre empresa
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(22);
       doc.setFont('times', 'bold');
@@ -647,7 +763,6 @@
       doc.setFont('helvetica', 'normal');
       doc.text(`Tel: ${config.empresa_telefono || defaultConfig.empresa_telefono}`, margin, 28);
       
-      // Dirección en dos líneas si es muy larga
       const direccion = config.empresa_direccion || defaultConfig.empresa_direccion;
       const maxWidth = 120;
       const direccionLines = doc.splitTextToSize(direccion, maxWidth);
@@ -657,7 +772,6 @@
         yDireccion += 5;
       });
 
-      // Fecha
       const fecha = new Date().toLocaleDateString('es-GT', {
         day: '2-digit',
         month: 'long',
@@ -667,16 +781,13 @@
       doc.setFontSize(8);
       doc.text(`Fecha: ${fecha}`, pageWidth - margin, 32, { align: 'right' });
 
-      // Título de orden
       doc.setTextColor(220, 38, 38);
       doc.setFontSize(20);
       doc.setFont('times', 'bold');
       doc.text('ORDEN DE COMPRA', pageWidth / 2, 65, { align: 'center' });
 
-      // Datos del cliente - Estilo factura
       let y = 75;
       
-      // Borde decorativo
       doc.setDrawColor(220, 38, 38);
       doc.setLineWidth(0.5);
       doc.line(margin, y, pageWidth - margin, y);
@@ -719,12 +830,10 @@
         y += 5;
       }
 
-      // Línea separadora
       y += 3;
       doc.setDrawColor(220, 38, 38);
       doc.line(margin, y, pageWidth - margin, y);
 
-      // Tabla de productos con código
       y += 8;
       const tableData = productos.map((p, i) => [
         i + 1,
@@ -765,11 +874,9 @@
         }
       });
 
-      // Total con diseño de factura
       const finalY = doc.lastAutoTable.finalY + 8;
       const total = productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0);
 
-      // Caja de total
       doc.setDrawColor(220, 38, 38);
       doc.setLineWidth(1);
       doc.setFillColor(220, 38, 38);
@@ -783,14 +890,12 @@
       doc.setFont('times', 'bold');
       doc.text(`Q ${total.toFixed(2)}`, pageWidth - margin - 32.5, finalY + 18, { align: 'center' });
 
-      // Footer
       const pageHeight = doc.internal.pageSize.getHeight();
       doc.setTextColor(148, 163, 184);
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text('Documento generado electr  nicamente', pageWidth / 2, pageHeight - 10, { align: 'center' });
+      doc.text('Documento generado electrónicamente', pageWidth / 2, pageHeight - 10, { align: 'center' });
 
-      // Descargar
       const negocioParaArchivo = document.getElementById('cliente-negocio').value.trim();
       const nombreArchivo = negocioParaArchivo || clienteNombre;
       const fileName = `${nombreArchivo.replace(/\s+/g, '_')}_Orden_${numeroOrden}.pdf`;
@@ -812,7 +917,7 @@
       const icons = {
         success: '✓',
         error: '✕',
-        info: '  '
+        info: 'ℹ'
       };
 
       toast.className = `toast flex items-center gap-3 px-4 py-3 rounded-xl text-white shadow-lg ${colors[type]} mb-2`;
@@ -832,72 +937,7 @@
       return div.innerHTML;
     }
 
-    // Iniciar aplicación
     init();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c5e9e56a6530da2',t:'MTc2OTc1MTQ1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<script>
-const supabaseUrl = "https://ryaawzodxtvcfvxphkgf.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5YWF3em9keHR2Y2Z2eHBoa2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzkyNTUsImV4cCI6MjA4NTM1NTI1NX0.bP3opRjM4639oAa3X0xoGh5i86r1mtRmq_wQ2s_dv0w";
-
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-</script>
-
-<script>
-async function guardarCotizacion() {
-
-  // Obtener nombre cliente
-  const cliente = document.getElementById("Nombre del Cliente").value;
-
-  // Obtener TODOS los productos
-  const productosInputs = document.querySelectorAll(".Descripción");
-  const productos = [];
-
-  productosInputs.forEach(input => {
-    if(input.value.trim() !== ""){
-      productos.push(input.value);
-    }
-  });
-
-  // Guardar en Supabase
-  const { data, error } = await supabaseClient
-    .from('cotizaciones')
-    .insert([
-      {
-        cliente: cliente,
-        producto: productos.join(", "), // guarda lista separada por comas
-        fecha: new Date()
-      }
-    ]);
-
-  if(error){
-    console.log(error);
-    alert("Error guardando");
-  } else {
-    alert("Guardado en la nube!");
-  }
-}
-</script>
-
-<button onclick="guardarCotizacion()">
-Guardar en base de datos
-</button>
-
-<script>
-async function guardarCotizacion(){
-  alert("Botón funcionando");
-
-  const { data, error } = await supabaseClient
-    .from('pedidos')
-    .insert([{cliente:"Test"}]);
-
-  console.log(data, error);
-}
-</script>
-
-</body>
-
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c633483c67bb0bf',t:'MTc2OTc5OTU1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
