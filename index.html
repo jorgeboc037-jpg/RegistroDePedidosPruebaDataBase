@@ -1,943 +1,921 @@
 <!doctype html>
-<html lang="es" class="h-full">
+<html lang="es">
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Pedidos</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <title>Sistema de Pedidos - Importadora Kairos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
-    body {
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-    h1, h2, h3 {
-      font-family: 'Crimson Pro', serif;
-    }
-    .toast {
-      animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
-    }
-    @keyframes slideIn {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    @keyframes fadeOut {
-      from { opacity: 1; }
-      to { opacity: 0; }
-    }
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-      transition: all 0.2s ease;
-    }
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-    }
-    .btn-secondary {
-      transition: all 0.2s ease;
-    }
-    .btn-secondary:hover {
-      background-color: #f1f5f9;
-    }
-    .card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-    }
-    .table-row:hover {
-      background-color: #f8fafc;
-    }
-    .spinner {
-      border: 3px solid #f3f4f6;
-      border-top: 3px solid #dc2626;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+            width: 100%;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100%;
+            padding: 2rem 1rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 0;
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: white;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-section h2 {
+            color: #667eea;
+            font-size: 1.5rem;
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .products-section {
+            margin-top: 2rem;
+        }
+
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .products-table table {
+            width: 100%;
+            min-width: 600px;
+        }
+
+        .products-table th {
+            background: #667eea;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .products-table th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        .products-table th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        .products-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .products-table input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .products-table input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .totals-section {
+            background: #f7fafc;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-top: 1.5rem;
+        }
+
+        .totals-section h3 {
+            color: #667eea;
+            margin: 0 0 1rem 0;
+            font-size: 1.25rem;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            font-size: 1rem;
+        }
+
+        .total-row.final {
+            border-top: 2px solid #667eea;
+            margin-top: 0.5rem;
+            padding-top: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .history-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .history-table table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        .history-table th {
+            background: #667eea;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .history-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .message-success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+
+        .message-error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #f56565;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
   <style>@view-transition { navigation: auto; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
   <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
- <body class="h-full bg-slate-50 text-slate-800">
-  <div id="app" class="h-full w-full overflow-auto"><!-- Toast Container -->
-   <div id="toast-container" class="fixed top-4 right-4 z-50"></div><!-- Header -->
-   <header id="main-header" class="bg-white border-b border-slate-200 sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 py-4">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-3">
-       <div id="logo-container" class="w-12 h-12 bg-gradient-to-br from-red-600 to-red-700 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-red-500/20">
-        📦
+ <body>
+  <div class="container">
+   <div class="header">
+    <h1>🏢 Importadora Kairos</h1>
+    <p>Sistema de Gestión de Pedidos</p>
+   </div>
+   <div class="nav-tabs"><button class="tab-btn active" onclick="switchTab('create')">Crear Pedido</button> <button class="tab-btn" onclick="switchTab('history')">Historial de Pedidos</button>
+   </div>
+   <div class="content-card">
+    <div id="create-tab" class="tab-content active">
+     <div id="message-container"></div>
+     <div class="form-section">
+      <h2>📋 Información del Pedido</h2>
+      <div class="form-grid">
+       <div class="form-group"><label for="order-id">Identificador del Pedido</label> <input type="text" id="order-id" placeholder="Ej: PED" value="PED">
        </div>
-       <div>
-        <h1 id="empresa-nombre-display" class="text-xl font-bold text-slate-800">Importadora Kairos</h1>
-        <p id="empresa-telefono-display" class="text-sm text-slate-500">3946-8391</p>
+       <div class="form-group"><label for="order-date">Fecha</label> <input type="text" id="order-date" disabled>
        </div>
-      </div>
-      <div class="flex gap-2"><button onclick="showView('pedido')" id="btn-nuevo" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-slate-600 border border-slate-200"> 📝 Nuevo </button> <button onclick="showView('historial')" id="btn-historial" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium text-slate-600 border border-slate-200"> 📋 Historial </button>
       </div>
      </div>
-    </div>
-   </header><!-- Main Content -->
-   <main class="max-w-6xl mx-auto px-4 py-6"><!-- Vista Pedido -->
-    <div id="vista-pedido"><!-- Datos del Cliente -->
-     <section class="card p-6 mb-6">
-      <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center text-red-600">👤</span> Datos del Cliente</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-       <div><label for="cliente-nombre" class="block text-sm font-medium text-slate-600 mb-1">Nombre del Cliente *</label> <input type="text" id="cliente-nombre" placeholder="Juan Pérez" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+     <div class="form-section">
+      <h2>👤 Información del Cliente</h2>
+      <div class="form-grid">
+       <div class="form-group"><label for="customer-name">Nombre del Cliente</label> <input type="text" id="customer-name" placeholder="Ingrese el nombre">
        </div>
-       <div><label for="cliente-negocio" class="block text-sm font-medium text-slate-600 mb-1">Nombre del Negocio</label> <input type="text" id="cliente-negocio" placeholder="Tienda La Bendición" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div class="form-group"><label for="customer-phone">Teléfono</label> <input type="tel" id="customer-phone" placeholder="Ej: 3649-8391">
        </div>
-       <div><label for="cliente-nit" class="block text-sm font-medium text-slate-600 mb-1">NIT</label> <input type="text" id="cliente-nit" placeholder="1234567-8" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div class="form-group"><label for="business-name">Nombre del Negocio</label> <input type="text" id="business-name" placeholder="Ingrese el nombre del negocio">
        </div>
-       <div><label for="cliente-telefono" class="block text-sm font-medium text-slate-600 mb-1">Teléfono *</label> <input type="tel" id="cliente-telefono" placeholder="+502 5555-5555" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div class="form-group"><label for="customer-address">Dirección</label> <input type="text" id="customer-address" placeholder="Ingrese la dirección">
        </div>
-       <div class="md:col-span-2"><label for="cliente-direccion" class="block text-sm font-medium text-slate-600 mb-1">Dirección</label> <input type="text" id="cliente-direccion" placeholder="Zona 1, Ciudad de Guatemala" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
-       </div>
-       <div><label for="numero-orden" class="block text-sm font-medium text-slate-600 mb-1">No. de Orden *</label> <input type="text" id="numero-orden" placeholder="001" class="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-800 placeholder-slate-400">
+       <div class="form-group"><label for="customer-nit">NIT</label> <input type="text" id="customer-nit" placeholder="Ingrese el NIT">
        </div>
       </div>
-     </section><!-- Tabla de Productos -->
-     <section class="card p-6 mb-6">
-      <div class="flex items-center justify-between mb-4">
-       <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">📦</span> Productos</h2><button onclick="agregarProducto()" class="btn-primary px-4 py-2 rounded-xl text-white text-sm font-medium flex items-center gap-2"> <span>+</span> Agregar Producto </button>
-      </div><!-- Tabla Desktop -->
-      <div class="hidden md:block overflow-x-auto">
-       <table class="w-full">
+     </div>
+     <div class="products-section">
+      <h2>🛒 Productos</h2>
+      <div class="products-table">
+       <table id="products-table">
         <thead>
-         <tr class="border-b border-slate-200">
-          <th class="text-left py-3 px-4 text-sm font-semibold text-slate-600 w-32">Código</th>
-          <th class="text-left py-3 px-4 text-sm font-semibold text-slate-600">Descripción</th>
-          <th class="text-center py-3 px-4 text-sm font-semibold text-slate-600 w-28">Cantidad</th>
-          <th class="text-center py-3 px-4 text-sm font-semibold text-slate-600 w-36">Precio Unit.</th>
-          <th class="text-right py-3 px-4 text-sm font-semibold text-slate-600 w-32">Total</th>
-          <th class="w-16"></th>
+         <tr>
+          <th>Código</th>
+          <th>Nombre del Producto</th>
+          <th>Cantidad</th>
+          <th>Precio Unitario (Q)</th>
+          <th>Total (Q)</th>
+          <th>Acciones</th>
          </tr>
         </thead>
-        <tbody id="productos-tabla"></tbody>
+        <tbody id="products-body">
+        </tbody>
        </table>
-      </div><!-- Cards Mobile -->
-      <div id="productos-cards" class="md:hidden space-y-3"></div><!-- Sin productos -->
-      <div id="sin-productos" class="text-center py-12 text-slate-400">
-       <div class="text-4xl mb-3">
-        📋
+      </div><button class="btn btn-secondary" onclick="addProductRow()">+ Agregar Producto</button>
+      <div class="totals-section">
+       <h3>💰 Resumen del Pedido</h3>
+       <div class="total-row"><span>Subtotal:</span> <span id="subtotal-display">Q 0.00</span>
        </div>
-       <p>No hay productos agregados</p>
-       <p class="text-sm">Haz clic en "Agregar Producto" para comenzar</p>
-      </div>
-     </section><!-- Total y Acciones -->
-     <section class="card p-6">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-       <div class="text-center md:text-left">
-        <p class="text-sm text-slate-500 mb-1">Total del Pedido</p>
-        <p id="total-general" class="text-3xl font-bold text-slate-800">Q 0.00</p>
-       </div>
-       <div class="flex flex-wrap gap-3 justify-center"><button onclick="limpiarPedido()" class="btn-secondary px-5 py-3 rounded-xl text-slate-600 border border-slate-200 font-medium flex items-center gap-2"> 🗑️ Limpiar </button> <button onclick="guardarPedido()" id="btn-guardar" class="btn-secondary px-5 py-3 rounded-xl text-emerald-600 border border-emerald-200 bg-emerald-50 font-medium flex items-center gap-2"> <span id="guardar-spinner" class="spinner hidden"></span> <span id="guardar-text">💾 Guardar</span> </button> <button onclick="generarPDF()" class="btn-primary px-5 py-3 rounded-xl text-white font-medium flex items-center gap-2"> 📄 Generar PDF </button>
+       <div class="total-row final"><span>TOTAL:</span> <span id="total-display">Q 0.00</span>
        </div>
       </div>
-     </section>
-    </div><!-- Vista Historial -->
-    <div id="vista-historial" class="hidden">
-     <section class="card p-6">
-      <div class="flex items-center justify-between mb-6">
-       <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600">📋</span> Historial de Pedidos</h2><span id="total-pedidos" class="px-3 py-1 bg-slate-100 rounded-full text-sm text-slate-600"></span>
-      </div>
-      <div id="historial-lista" class="space-y-3"></div>
-      <div id="sin-historial" class="text-center py-12 text-slate-400 hidden">
-       <div class="text-4xl mb-3">
-        📭
-       </div>
-       <p>No hay pedidos guardados</p>
-       <p class="text-sm">Los pedidos que guardes aparecerán aquí</p>
-      </div>
-      <div id="loading-historial" class="text-center py-12">
-       <div class="spinner mx-auto mb-3" style="width: 40px; height: 40px; border-width: 4px;"></div>
-       <p class="text-slate-500">Cargando pedidos...</p>
-      </div>
-     </section>
-    </div>
-   </main><!-- Modal Confirmación -->
-   <div id="modal-confirm" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 max-w-sm w-full">
-     <h3 id="modal-title" class="text-lg font-semibold text-slate-800 mb-2">Confirmar acción</h3>
-     <p id="modal-message" class="text-slate-600 mb-6">¿Estás seguro?</p>
-     <div class="flex gap-3"><button onclick="closeModal()" class="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium">Cancelar</button> <button id="modal-confirm-btn" class="flex-1 px-4 py-2 rounded-xl bg-red-500 text-white font-medium flex items-center justify-center gap-2"> <span id="delete-spinner" class="spinner hidden" style="width: 16px; height: 16px; border-width: 2px;"></span> <span id="delete-text">Eliminar</span> </button>
+     </div>
+     <div class="action-buttons"><button class="btn btn-success" onclick="saveAndGeneratePDF()">💾 Guardar y Generar PDF</button> <button class="btn btn-primary" onclick="clearForm()">🔄 Limpiar Formulario</button>
      </div>
     </div>
-   </div><!-- Modal Detalle Pedido -->
-   <div id="modal-detalle" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90%] overflow-auto">
-     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-semibold text-slate-800">Detalle del Pedido</h3><button onclick="closeDetalleModal()" class="text-slate-400 hover:text-slate-600 text-2xl">×</button>
+    <div id="history-tab" class="tab-content">
+     <h2>📊 Historial de Pedidos</h2>
+     <div id="history-loading" class="loading">
+      Cargando pedidos...
      </div>
-     <div id="modal-detalle-content"></div>
-     <div class="flex gap-3 mt-6"><button onclick="closeDetalleModal()" class="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-medium">Cerrar</button> <button id="btn-recargar-pedido" class="flex-1 px-4 py-2 rounded-xl bg-blue-500 text-white font-medium">Cargar Pedido</button>
+     <div id="history-content" style="display: none;">
+      <div class="history-table">
+       <table>
+        <thead>
+         <tr>
+          <th>N° Pedido</th>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th>Negocio</th>
+          <th>Total</th>
+          <th>Acciones</th>
+         </tr>
+        </thead>
+        <tbody id="history-body">
+        </tbody>
+       </table>
+      </div>
      </div>
     </div>
    </div>
   </div>
   <script>
-    // ============ CONFIGURACIÓN SUPABASE ============
-    const SUPABASE_URL = 'https://ryaawzodxtvcfvxphkgf.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5YWF3em9keHR2Y2Z2eHBoa2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzkyNTUsImV4cCI6MjA4NTM1NTI1NX0.bP3opRjM4639oAa3X0xoGh5i86r1mtRmq_wQ2s_dv0w';
-    
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_URL = 'https://ryaawzodxtvcfvxphkgf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5YWF3em9keHR2Y2Z2eHBoa2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzkyNTUsImV4cCI6MjA4NTM1NTI1NX0.bP3opRjM4639oAa3X0xoGh5i86r1mtRmq_wQ2s_dv0w';
 
-    // ============ CONFIGURACIÓN ============
-    const defaultConfig = {
-      empresa_nombre: 'Importadora Kairos',
-      empresa_telefono: '3946-8391',
-      empresa_direccion: 'Calzada Atanasio Tzul, zona 12, Plaza Atanasio Tzul, local 54'
-    };
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let config = { ...defaultConfig };
-    let productos = [];
-    let historialPedidos = [];
-    let pendingConfirmAction = null;
-    let currentDetailPedido = null;
+        const COMPANY_NAME = 'Importadora Kairos';
+        const COMPANY_ADDRESS = 'Local 54, Plaza Atanasio Tzul, Zona 12';
+        const COMPANY_PHONE = '3649-8391';
 
-    // ============ INICIALIZACIÓN ============
-    async function init() {
-      renderProductos();
-      updateTotal();
-      await cargarHistorialDesdeSupabase();
-    }
+        let productCounter = 0;
 
-    // ============ SUPABASE FUNCIONES ============
-    async function cargarHistorialDesdeSupabase() {
-      const loadingEl = document.getElementById('loading-historial');
-      const listaEl = document.getElementById('historial-lista');
-      const sinHistorialEl = document.getElementById('sin-historial');
-
-      try {
-        loadingEl.classList.remove('hidden');
-        listaEl.innerHTML = '';
-        sinHistorialEl.classList.add('hidden');
-
-        const { data, error } = await supabase
-          .from('pedidos')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        loadingEl.classList.add('hidden');
-
-        if (error) throw error;
-
-        historialPedidos = data.map(pedido => ({
-          id: pedido.id,
-          fecha: pedido.created_at,
-          cliente_nombre: pedido.cliente_nombre,
-          cliente_negocio: pedido.cliente_negocio,
-          cliente_nit: pedido.cliente_nit,
-          cliente_telefono: pedido.cliente_telefono,
-          cliente_direccion: pedido.cliente_direccion,
-          numero_orden: pedido.numero_orden,
-          productos: pedido.productos,
-          total: parseFloat(pedido.total)
-        }));
-
-        renderHistorial();
-      } catch (error) {
-        loadingEl.classList.add('hidden');
-        console.error('Error al cargar historial:', error);
-        showToast('Error al cargar pedidos desde la base de datos', 'error');
-      }
-    }
-
-    async function guardarPedidoEnSupabase(pedidoData) {
-      try {
-        const { data, error } = await supabase
-          .from('pedidos')
-          .insert([{
-            numero_orden: pedidoData.numero_orden,
-            cliente_nombre: pedidoData.cliente_nombre,
-            cliente_negocio: pedidoData.cliente_negocio,
-            cliente_nit: pedidoData.cliente_nit,
-            cliente_telefono: pedidoData.cliente_telefono,
-            cliente_direccion: pedidoData.cliente_direccion,
-            productos: pedidoData.productos,
-            total: pedidoData.total
-          }])
-          .select();
-
-        if (error) throw error;
-        return { success: true, data: data[0] };
-      } catch (error) {
-        console.error('Error al guardar pedido:', error);
-        return { success: false, error };
-      }
-    }
-
-    async function eliminarPedidoDeSupabase(pedidoId) {
-      try {
-        const { error } = await supabase
-          .from('pedidos')
-          .delete()
-          .eq('id', pedidoId);
-
-        if (error) throw error;
-        return { success: true };
-      } catch (error) {
-        console.error('Error al eliminar pedido:', error);
-        return { success: false, error };
-      }
-    }
-
-    // ============ VISTA ============
-    function showView(view) {
-      const vistaPedido = document.getElementById('vista-pedido');
-      const vistaHistorial = document.getElementById('vista-historial');
-      const btnNuevo = document.getElementById('btn-nuevo');
-      const btnHistorial = document.getElementById('btn-historial');
-
-      if (view === 'pedido') {
-        vistaPedido.classList.remove('hidden');
-        vistaHistorial.classList.add('hidden');
-        btnNuevo.classList.add('bg-red-50', 'text-red-600', 'border-red-200');
-        btnNuevo.classList.remove('text-slate-600', 'border-slate-200');
-        btnHistorial.classList.remove('bg-red-50', 'text-red-600', 'border-red-200');
-        btnHistorial.classList.add('text-slate-600', 'border-slate-200');
-      } else {
-        vistaPedido.classList.add('hidden');
-        vistaHistorial.classList.remove('hidden');
-        btnHistorial.classList.add('bg-red-50', 'text-red-600', 'border-red-200');
-        btnHistorial.classList.remove('text-slate-600', 'border-slate-200');
-        btnNuevo.classList.remove('bg-red-50', 'text-red-600', 'border-red-200');
-        btnNuevo.classList.add('text-slate-600', 'border-slate-200');
-        cargarHistorialDesdeSupabase();
-      }
-    }
-
-    function updateEmpresaDisplay() {
-      document.getElementById('empresa-nombre-display').textContent = config.empresa_nombre;
-      document.getElementById('empresa-telefono-display').textContent = config.empresa_telefono;
-    }
-
-    updateEmpresaDisplay();
-
-    // ============ PRODUCTOS ============
-    function agregarProducto() {
-      const id = Date.now().toString();
-      productos.push({
-        id,
-        codigo: '',
-        descripcion: '',
-        cantidad: 1,
-        precio: 0
-      });
-      renderProductos();
-      updateTotal();
-    }
-
-    function eliminarProducto(id) {
-      productos = productos.filter(p => p.id !== id);
-      renderProductos();
-      updateTotal();
-    }
-
-    function actualizarProducto(id, campo, valor) {
-      const producto = productos.find(p => p.id === id);
-      if (producto) {
-        if (campo === 'cantidad' || campo === 'precio') {
-          producto[campo] = parseFloat(valor) || 0;
-        } else {
-          producto[campo] = valor;
+        function initializeApp() {
+            setCurrentDate();
+            addProductRow();
+            addProductRow();
+            addProductRow();
         }
-        updateTotal();
-        const totalElement = document.querySelector(`[data-total-id="${id}"]`);
-        if (totalElement) {
-          totalElement.textContent = `Q ${(producto.cantidad * producto.precio).toFixed(2)}`;
+
+        function setCurrentDate() {
+            const today = new Date();
+            const dateStr = formatDate(today);
+            document.getElementById('order-date').value = dateStr;
         }
-      }
-    }
 
-    function renderProductos() {
-      const tabla = document.getElementById('productos-tabla');
-      const cards = document.getElementById('productos-cards');
-      const sinProductos = document.getElementById('sin-productos');
-
-      if (productos.length === 0) {
-        tabla.innerHTML = '';
-        cards.innerHTML = '';
-        sinProductos.classList.remove('hidden');
-        return;
-      }
-
-      sinProductos.classList.add('hidden');
-
-      tabla.innerHTML = productos.map(p => `
-        <tr class="table-row border-b border-slate-100">
-          <td class="py-3 px-4">
-            <input type="text" value="${escapeHtml(p.codigo || '')}" 
-              onchange="actualizarProducto('${p.id}', 'codigo', this.value)"
-              placeholder="SKU-001"
-              class="w-full px-3 py-2 rounded-lg border border-slate-200 text-slate-800 placeholder-slate-400 font-mono text-sm">
-          </td>
-          <td class="py-3 px-4">
-            <input type="text" value="${escapeHtml(p.descripcion)}" 
-              onchange="actualizarProducto('${p.id}', 'descripcion', this.value)"
-              placeholder="Descripción del producto"
-              class="w-full px-3 py-2 rounded-lg border border-slate-200 text-slate-800 placeholder-slate-400">
-          </td>
-          <td class="py-3 px-4">
-            <input type="number" value="${p.cantidad}" min="1" step="1"
-              onchange="actualizarProducto('${p.id}', 'cantidad', this.value)"
-              class="w-full px-3 py-2 rounded-lg border border-slate-200 text-center text-slate-800">
-          </td>
-          <td class="py-3 px-4">
-            <input type="number" value="${p.precio}" min="0" step="0.01"
-              onchange="actualizarProducto('${p.id}', 'precio', this.value)"
-              class="w-full px-3 py-2 rounded-lg border border-slate-200 text-center text-slate-800">
-          </td>
-          <td class="py-3 px-4 text-right font-semibold text-slate-800" data-total-id="${p.id}">
-            Q ${(p.cantidad * p.precio).toFixed(2)}
-          </td>
-          <td class="py-3 px-2">
-            <button onclick="eliminarProducto('${p.id}')" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-              🗑️
-            </button>
-          </td>
-        </tr>
-      `).join('');
-
-      cards.innerHTML = productos.map(p => `
-        <div class="bg-slate-50 rounded-xl p-4">
-          <div class="flex justify-between items-start mb-3">
-            <div class="flex-1 mr-2">
-              <input type="text" value="${escapeHtml(p.codigo || '')}" 
-                onchange="actualizarProducto('${p.id}', 'codigo', this.value)"
-                placeholder="Código"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 text-slate-800 placeholder-slate-400 mb-2 font-mono text-sm">
-              <input type="text" value="${escapeHtml(p.descripcion)}" 
-                onchange="actualizarProducto('${p.id}', 'descripcion', this.value)"
-                placeholder="Descripción del producto"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 text-slate-800 placeholder-slate-400">
-            </div>
-            <button onclick="eliminarProducto('${p.id}')" class="p-2 text-red-500 hover:bg-red-100 rounded-lg">
-              🗑️
-            </button>
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <div>
-              <label class="text-xs text-slate-500">Cantidad</label>
-              <input type="number" value="${p.cantidad}" min="1" step="1"
-                onchange="actualizarProducto('${p.id}', 'cantidad', this.value)"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 text-center text-slate-800">
-            </div>
-            <div>
-              <label class="text-xs text-slate-500">Precio</label>
-              <input type="number" value="${p.precio}" min="0" step="0.01"
-                onchange="actualizarProducto('${p.id}', 'precio', this.value)"
-                class="w-full px-3 py-2 rounded-lg border border-slate-200 text-center text-slate-800">
-            </div>
-            <div>
-              <label class="text-xs text-slate-500">Total</label>
-              <div class="px-3 py-2 bg-white rounded-lg text-center font-semibold text-slate-800" data-total-id="${p.id}">
-                Q ${(p.cantidad * p.precio).toFixed(2)}
-              </div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function updateTotal() {
-      const total = productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0);
-      document.getElementById('total-general').textContent = `Q ${total.toFixed(2)}`;
-    }
-
-    // ============ GUARDAR PEDIDO ============
-    async function guardarPedido() {
-      const clienteNombre = document.getElementById('cliente-nombre').value.trim();
-      const numeroOrden = document.getElementById('numero-orden').value.trim();
-
-      if (!clienteNombre) {
-        showToast('Ingresa el nombre del cliente', 'error');
-        return;
-      }
-
-      if (!numeroOrden) {
-        showToast('Ingresa el número de orden', 'error');
-        return;
-      }
-
-      if (productos.length === 0) {
-        showToast('Agrega al menos un producto', 'error');
-        return;
-      }
-
-      const btnGuardar = document.getElementById('btn-guardar');
-      const spinner = document.getElementById('guardar-spinner');
-      const text = document.getElementById('guardar-text');
-      
-      btnGuardar.disabled = true;
-      spinner.classList.remove('hidden');
-      text.textContent = 'Guardando...';
-
-      const pedidoData = {
-        numero_orden: numeroOrden,
-        cliente_nombre: clienteNombre,
-        cliente_negocio: document.getElementById('cliente-negocio').value.trim(),
-        cliente_nit: document.getElementById('cliente-nit').value.trim(),
-        cliente_telefono: document.getElementById('cliente-telefono').value.trim(),
-        cliente_direccion: document.getElementById('cliente-direccion').value.trim(),
-        productos: JSON.stringify(productos),
-        total: productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0)
-      };
-
-      const result = await guardarPedidoEnSupabase(pedidoData);
-      
-      btnGuardar.disabled = false;
-      spinner.classList.add('hidden');
-      text.textContent = '💾 Guardar';
-
-      if (result.success) {
-        showToast('Pedido guardado exitosamente en Supabase', 'success');
-        await cargarHistorialDesdeSupabase();
-        limpiarPedido();
-      } else {
-        showToast('Error al guardar el pedido', 'error');
-      }
-    }
-
-    // ============ HISTORIAL ============
-    function renderHistorial() {
-      const lista = document.getElementById('historial-lista');
-      const sinHistorial = document.getElementById('sin-historial');
-      const totalPedidos = document.getElementById('total-pedidos');
-      const loadingEl = document.getElementById('loading-historial');
-
-      loadingEl.classList.add('hidden');
-      totalPedidos.textContent = `${historialPedidos.length} pedido${historialPedidos.length !== 1 ? 's' : ''}`;
-
-      if (historialPedidos.length === 0) {
-        lista.innerHTML = '';
-        sinHistorial.classList.remove('hidden');
-        return;
-      }
-
-      sinHistorial.classList.add('hidden');
-
-      lista.innerHTML = historialPedidos.map(pedido => {
-        const fecha = new Date(pedido.fecha);
-        const fechaStr = fecha.toLocaleDateString('es-GT', { 
-          day: '2-digit', 
-          month: 'short', 
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-
-        return `
-          <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer" onclick="verDetallePedido('${pedido.id}')">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="text-xs px-2 py-0.5 bg-slate-700 text-white rounded-full font-mono">Orden ${escapeHtml(pedido.numero_orden || '-')}</span>
-                <span class="font-semibold text-slate-800 truncate">${escapeHtml(pedido.cliente_nombre)}</span>
-                ${pedido.cliente_negocio ? `<span class="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full truncate">${escapeHtml(pedido.cliente_negocio)}</span>` : ''}
-              </div>
-              <p class="text-sm text-slate-500">${fechaStr}</p>
-            </div>
-            <div class="flex items-center gap-3 ml-4">
-              <span class="font-bold text-emerald-600 whitespace-nowrap">Q ${pedido.total.toFixed(2)}</span>
-              <button onclick="event.stopPropagation(); confirmarEliminar('${pedido.id}')" class="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors">
-                🗑️
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function verDetallePedido(pedidoId) {
-      const pedido = historialPedidos.find(p => p.id === pedidoId);
-      if (!pedido) return;
-
-      currentDetailPedido = pedido;
-      const prods = JSON.parse(pedido.productos || '[]');
-      const fecha = new Date(pedido.fecha).toLocaleDateString('es-GT', { 
-        day: '2-digit', 
-        month: 'long', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      const content = document.getElementById('modal-detalle-content');
-      content.innerHTML = `
-        <div class="space-y-4">
-          <div class="bg-slate-50 rounded-xl p-4">
-            <p class="text-sm text-slate-500 mb-1">No. de Orden</p>
-            <p class="font-bold text-slate-800 text-lg">Orden ${escapeHtml(pedido.numero_orden || '-')}</p>
-          </div>
-          <div class="bg-slate-50 rounded-xl p-4">
-            <p class="text-sm text-slate-500 mb-1">Fecha</p>
-            <p class="font-medium text-slate-800">${fecha}</p>
-          </div>
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-500 mb-1">Cliente</p>
-              <p class="font-medium text-slate-800">${escapeHtml(pedido.cliente_nombre)}</p>
-            </div>
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-500 mb-1">Negocio</p>
-              <p class="font-medium text-slate-800">${escapeHtml(pedido.cliente_negocio || '-')}</p>
-            </div>
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-500 mb-1">NIT</p>
-              <p class="font-medium text-slate-800">${escapeHtml(pedido.cliente_nit || '-')}</p>
-            </div>
-            <div class="bg-slate-50 rounded-xl p-4">
-              <p class="text-sm text-slate-500 mb-1">Teléfono</p>
-              <p class="font-medium text-slate-800">${escapeHtml(pedido.cliente_telefono || '-')}</p>
-            </div>
-          </div>
-          <div class="bg-slate-50 rounded-xl p-4">
-            <p class="text-sm text-slate-500 mb-1">Dirección</p>
-            <p class="font-medium text-slate-800">${escapeHtml(pedido.cliente_direccion || '-')}</p>
-          </div>
-          <div class="bg-slate-50 rounded-xl p-4">
-            <p class="text-sm text-slate-500 mb-3">Productos (${prods.length})</p>
-            <div class="space-y-2">
-              ${prods.map(p => `
-                <div class="flex justify-between items-center py-2 border-b border-slate-200 last:border-0">
-                  <div>
-                    <p class="font-medium text-slate-800">${escapeHtml(p.descripcion || 'Sin descripción')}</p>
-                    <p class="text-sm text-slate-500">${p.cantidad} × Q ${p.precio.toFixed(2)}</p>
-                  </div>
-                  <span class="font-semibold text-slate-800">Q ${(p.cantidad * p.precio).toFixed(2)}</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-          <div class="bg-emerald-50 rounded-xl p-4 flex justify-between items-center">
-            <span class="text-emerald-700 font-medium">Total del Pedido</span>
-            <span class="text-2xl font-bold text-emerald-700">Q ${pedido.total.toFixed(2)}</span>
-          </div>
-        </div>
-      `;
-
-      document.getElementById('btn-recargar-pedido').onclick = () => cargarPedido(pedido);
-      document.getElementById('modal-detalle').classList.remove('hidden');
-      document.getElementById('modal-detalle').classList.add('flex');
-    }
-
-    function closeDetalleModal() {
-      document.getElementById('modal-detalle').classList.add('hidden');
-      document.getElementById('modal-detalle').classList.remove('flex');
-      currentDetailPedido = null;
-    }
-
-    function cargarPedido(pedido) {
-      document.getElementById('cliente-nombre').value = pedido.cliente_nombre || '';
-      document.getElementById('cliente-negocio').value = pedido.cliente_negocio || '';
-      document.getElementById('cliente-nit').value = pedido.cliente_nit || '';
-      document.getElementById('cliente-telefono').value = pedido.cliente_telefono || '';
-      document.getElementById('cliente-direccion').value = pedido.cliente_direccion || '';
-      document.getElementById('numero-orden').value = pedido.numero_orden || '';
-      
-      productos = JSON.parse(pedido.productos || '[]').map(p => ({
-        ...p,
-        id: Date.now().toString() + Math.random().toString(36).substr(2, 9)
-      }));
-      
-      renderProductos();
-      updateTotal();
-      closeDetalleModal();
-      showView('pedido');
-      showToast('Pedido cargado', 'success');
-    }
-
-    // ============ ELIMINAR ============
-    function confirmarEliminar(pedidoId) {
-      pendingConfirmAction = () => eliminarPedido(pedidoId);
-      document.getElementById('modal-title').textContent = 'Eliminar Pedido';
-      document.getElementById('modal-message').textContent = '¿Estás seguro de eliminar este pedido? Esta acción no se puede deshacer.';
-      document.getElementById('modal-confirm-btn').onclick = () => {
-        if (pendingConfirmAction) pendingConfirmAction();
-      };
-      document.getElementById('modal-confirm').classList.remove('hidden');
-      document.getElementById('modal-confirm').classList.add('flex');
-    }
-
-    function closeModal() {
-      document.getElementById('modal-confirm').classList.add('hidden');
-      document.getElementById('modal-confirm').classList.remove('flex');
-      pendingConfirmAction = null;
-    }
-
-    async function eliminarPedido(pedidoId) {
-      const btnConfirm = document.getElementById('modal-confirm-btn');
-      const spinner = document.getElementById('delete-spinner');
-      const text = document.getElementById('delete-text');
-      
-      btnConfirm.disabled = true;
-      spinner.classList.remove('hidden');
-      text.textContent = 'Eliminando...';
-
-      const result = await eliminarPedidoDeSupabase(pedidoId);
-      
-      btnConfirm.disabled = false;
-      spinner.classList.add('hidden');
-      text.textContent = 'Eliminar';
-      closeModal();
-
-      if (result.success) {
-        showToast('Pedido eliminado de Supabase', 'success');
-        await cargarHistorialDesdeSupabase();
-      } else {
-        showToast('Error al eliminar el pedido', 'error');
-      }
-    }
-
-    // ============ LIMPIAR ============
-    function limpiarPedido() {
-      document.getElementById('cliente-nombre').value = '';
-      document.getElementById('cliente-negocio').value = '';
-      document.getElementById('cliente-nit').value = '';
-      document.getElementById('cliente-telefono').value = '';
-      document.getElementById('cliente-direccion').value = '';
-      document.getElementById('numero-orden').value = '';
-      productos = [];
-      renderProductos();
-      updateTotal();
-    }
-
-    // ============ GENERAR PDF ============
-    function generarPDF() {
-      const clienteNombre = document.getElementById('cliente-nombre').value.trim();
-      const numeroOrden = document.getElementById('numero-orden').value.trim();
-      
-      if (!clienteNombre) {
-        showToast('Ingresa el nombre del cliente', 'error');
-        return;
-      }
-
-      if (!numeroOrden) {
-        showToast('Ingresa el número de orden', 'error');
-        return;
-      }
-
-      if (productos.length === 0) {
-        showToast('Agrega al menos un producto', 'error');
-        return;
-      }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const margin = 20;
-
-      doc.setFillColor(220, 38, 38);
-      doc.rect(0, 0, pageWidth, 50, 'F');
-
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(pageWidth - margin - 50, 10, 50, 12, 2, 2, 'F');
-      doc.setFontSize(8);
-      doc.setTextColor(220, 38, 38);
-      doc.setFont('helvetica', 'bold');
-      doc.text(`Orden No. ${numeroOrden}`, pageWidth - margin - 25, 17, { align: 'center' });
-
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(22);
-      doc.setFont('times', 'bold');
-      doc.text(config.empresa_nombre || defaultConfig.empresa_nombre, margin, 20);
-      
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Tel: ${config.empresa_telefono || defaultConfig.empresa_telefono}`, margin, 28);
-      
-      const direccion = config.empresa_direccion || defaultConfig.empresa_direccion;
-      const maxWidth = 120;
-      const direccionLines = doc.splitTextToSize(direccion, maxWidth);
-      let yDireccion = 34;
-      direccionLines.forEach(line => {
-        doc.text(line, margin, yDireccion);
-        yDireccion += 5;
-      });
-
-      const fecha = new Date().toLocaleDateString('es-GT', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-      });
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(8);
-      doc.text(`Fecha: ${fecha}`, pageWidth - margin, 32, { align: 'right' });
-
-      doc.setTextColor(220, 38, 38);
-      doc.setFontSize(20);
-      doc.setFont('times', 'bold');
-      doc.text('ORDEN DE COMPRA', pageWidth / 2, 65, { align: 'center' });
-
-      let y = 75;
-      
-      doc.setDrawColor(220, 38, 38);
-      doc.setLineWidth(0.5);
-      doc.line(margin, y, pageWidth - margin, y);
-      
-      y += 8;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(220, 38, 38);
-      doc.text('FACTURAR A:', margin, y);
-
-      doc.setFont('times', 'normal');
-      doc.setTextColor(30, 41, 59);
-      doc.setFontSize(11);
-      y += 7;
-      
-      const clienteNegocio = document.getElementById('cliente-negocio').value.trim();
-      const clienteNit = document.getElementById('cliente-nit').value.trim();
-      const clienteTelefono = document.getElementById('cliente-telefono').value.trim();
-      const clienteDireccion = document.getElementById('cliente-direccion').value.trim();
-
-      doc.setFont('times', 'bold');
-      doc.text(clienteNombre, margin, y);
-      y += 6;
-      doc.setFont('times', 'normal');
-      if (clienteNegocio) {
-        doc.text(clienteNegocio, margin, y);
-        y += 6;
-      }
-      if (clienteNit) {
-        doc.setFontSize(9);
-        doc.text(`NIT: ${clienteNit}`, margin, y);
-        y += 5;
-      }
-      if (clienteTelefono) {
-        doc.text(`Tel: ${clienteTelefono}`, margin, y);
-        y += 5;
-      }
-      if (clienteDireccion) {
-        doc.text(clienteDireccion, margin, y);
-        y += 5;
-      }
-
-      y += 3;
-      doc.setDrawColor(220, 38, 38);
-      doc.line(margin, y, pageWidth - margin, y);
-
-      y += 8;
-      const tableData = productos.map((p, i) => [
-        i + 1,
-        p.codigo || '-',
-        p.descripcion || 'Sin descripción',
-        p.cantidad,
-        `Q ${p.precio.toFixed(2)}`,
-        `Q ${(p.cantidad * p.precio).toFixed(2)}`
-      ]);
-
-      doc.autoTable({
-        startY: y,
-        head: [['#', 'Código', 'Descripción', 'Cant.', 'P. Unit.', 'Total']],
-        body: tableData,
-        margin: { left: margin, right: margin },
-        headStyles: {
-          fillColor: [220, 38, 38],
-          textColor: [255, 255, 255],
-          fontSize: 9,
-          fontStyle: 'bold',
-          font: 'helvetica'
-        },
-        bodyStyles: {
-          fontSize: 9,
-          textColor: [30, 41, 59],
-          font: 'times'
-        },
-        alternateRowStyles: {
-          fillColor: [254, 242, 242]
-        },
-        columnStyles: {
-          0: { cellWidth: 12, halign: 'center', font: 'helvetica' },
-          1: { cellWidth: 25, halign: 'left', font: 'courier', fontSize: 8 },
-          2: { cellWidth: 'auto', halign: 'left' },
-          3: { cellWidth: 18, halign: 'center', font: 'helvetica' },
-          4: { cellWidth: 28, halign: 'right', font: 'helvetica' },
-          5: { cellWidth: 28, halign: 'right', font: 'helvetica', fontStyle: 'bold' }
+        function formatDate(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return day + '/' + month + '/' + year;
         }
-      });
 
-      const finalY = doc.lastAutoTable.finalY + 8;
-      const total = productos.reduce((sum, p) => sum + (p.cantidad * p.precio), 0);
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab-content');
+            const buttons = document.querySelectorAll('.tab-btn');
 
-      doc.setDrawColor(220, 38, 38);
-      doc.setLineWidth(1);
-      doc.setFillColor(220, 38, 38);
-      doc.roundedRect(pageWidth - margin - 65, finalY, 65, 24, 2, 2, 'FD');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('TOTAL A PAGAR', pageWidth - margin - 32.5, finalY + 8, { align: 'center' });
-      doc.setFontSize(16);
-      doc.setFont('times', 'bold');
-      doc.text(`Q ${total.toFixed(2)}`, pageWidth - margin - 32.5, finalY + 18, { align: 'center' });
+            tabs.forEach(function(tab) {
+                tab.classList.remove('active');
+            });
 
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.setTextColor(148, 163, 184);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text('Documento generado electrónicamente', pageWidth / 2, pageHeight - 10, { align: 'center' });
+            buttons.forEach(function(btn) {
+                btn.classList.remove('active');
+            });
 
-      const negocioParaArchivo = document.getElementById('cliente-negocio').value.trim();
-      const nombreArchivo = negocioParaArchivo || clienteNombre;
-      const fileName = `${nombreArchivo.replace(/\s+/g, '_')}_Orden_${numeroOrden}.pdf`;
-      doc.save(fileName);
-      showToast('PDF generado exitosamente', 'success');
-    }
+            if (tabName === 'create') {
+                document.getElementById('create-tab').classList.add('active');
+                buttons[0].classList.add('active');
+            } else if (tabName === 'history') {
+                document.getElementById('history-tab').classList.add('active');
+                buttons[1].classList.add('active');
+                loadHistory();
+            }
+        }
 
-    // ============ UTILIDADES ============
-    function showToast(message, type = 'info') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      
-      const colors = {
-        success: 'bg-emerald-500',
-        error: 'bg-red-500',
-        info: 'bg-blue-500'
-      };
+        function addProductRow() {
+            productCounter++;
+            const tbody = document.getElementById('products-body');
+            const row = document.createElement('tr');
+            row.id = 'product-row-' + productCounter;
 
-      const icons = {
-        success: '✓',
-        error: '✕',
-        info: 'ℹ'
-      };
+            row.innerHTML = '<td><input type="text" class="product-code" placeholder="Código"></td>' +
+                '<td><input type="text" class="product-name" placeholder="Nombre del producto"></td>' +
+                '<td><input type="number" class="product-quantity" placeholder="0" min="0" oninput="calculateRowTotal(' + productCounter + ')"></td>' +
+                '<td><input type="number" class="product-price" placeholder="0.00" min="0" step="0.01" oninput="calculateRowTotal(' + productCounter + ')"></td>' +
+                '<td><input type="text" class="product-total" placeholder="Q 0.00" disabled></td>' +
+                '<td><button class="btn btn-danger" onclick="removeProductRow(' + productCounter + ')">Eliminar</button></td>';
 
-      toast.className = `toast flex items-center gap-3 px-4 py-3 rounded-xl text-white shadow-lg ${colors[type]} mb-2`;
-      toast.innerHTML = `
-        <span class="w-6 h-6 flex items-center justify-center bg-white/20 rounded-full text-sm">${icons[type]}</span>
-        <span class="font-medium">${message}</span>
-      `;
+            tbody.appendChild(row);
+        }
 
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
+        function removeProductRow(rowId) {
+            const row = document.getElementById('product-row-' + rowId);
+            if (row) {
+                row.remove();
+                calculateTotals();
+            }
+        }
 
-    function escapeHtml(text) {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+        function calculateRowTotal(rowId) {
+            const row = document.getElementById('product-row-' + rowId);
+            if (!row) return;
 
-    init();
-  </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c633483c67bb0bf',t:'MTc2OTc5OTU1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+            const quantity = parseFloat(row.querySelector('.product-quantity').value) || 0;
+            const price = parseFloat(row.querySelector('.product-price').value) || 0;
+            const total = quantity * price;
+
+            row.querySelector('.product-total').value = 'Q ' + total.toFixed(2);
+            calculateTotals();
+        }
+
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#products-body tr');
+            let subtotal = 0;
+
+            rows.forEach(function(row) {
+                const quantity = parseFloat(row.querySelector('.product-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.product-price').value) || 0;
+                subtotal += quantity * price;
+            });
+
+            const total = subtotal;
+
+            document.getElementById('subtotal-display').textContent = 'Q ' + subtotal.toFixed(2);
+            document.getElementById('total-display').textContent = 'Q ' + total.toFixed(2);
+        }
+
+        function getProductsData() {
+            const rows = document.querySelectorAll('#products-body tr');
+            const products = [];
+            const codigos = [];
+
+            rows.forEach(function(row) {
+                const code = row.querySelector('.product-code').value.trim();
+                const name = row.querySelector('.product-name').value.trim();
+                const quantity = parseFloat(row.querySelector('.product-quantity').value) || 0;
+                const price = parseFloat(row.querySelector('.product-price').value) || 0;
+
+                if (name && quantity > 0 && price > 0) {
+                    products.push({
+                        codigo: code,
+                        nombre: name,
+                        cantidad: quantity,
+                        precio_unitario: price,
+                        total: quantity * price
+                    });
+                    if (code) {
+                        codigos.push(code);
+                    }
+                }
+            });
+
+            return { products: products, codigos: codigos };
+        }
+
+        function validateForm() {
+            const customerName = document.getElementById('customer-name').value.trim();
+            const businessName = document.getElementById('business-name').value.trim();
+            const productsData = getProductsData();
+
+            if (!customerName) {
+                showMessage('Por favor ingrese el nombre del cliente', 'error');
+                return false;
+            }
+
+            if (!businessName) {
+                showMessage('Por favor ingrese el nombre del negocio', 'error');
+                return false;
+            }
+
+            if (productsData.products.length === 0) {
+                showMessage('Por favor agregue al menos un producto con cantidad y precio', 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function showMessage(text, type) {
+            const container = document.getElementById('message-container');
+            const messageClass = type === 'success' ? 'message-success' : 'message-error';
+            container.innerHTML = '<div class="message ' + messageClass + '">' + text + '</div>';
+
+            setTimeout(function() {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        async function getDailyConsecutive() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const datePrefix = year + month + day;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Pedidos')
+                    .select('order_number')
+                    .like('order_number', '%' + datePrefix + '%')
+                    .order('order_number', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    const lastOrderNumber = data[0].order_number;
+                    const parts = lastOrderNumber.split('-');
+                    if (parts.length >= 2) {
+                        const lastConsecutive = parseInt(parts[parts.length - 1]) || 0;
+                        return lastConsecutive + 1;
+                    }
+                }
+
+                return 1;
+            } catch (error) {
+                console.error('Error obteniendo consecutivo:', error);
+                return 1;
+            }
+        }
+
+        function generateOrderNumber(manualId, consecutive) {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateStr = year + month + day;
+            const consecutiveStr = String(consecutive).padStart(4, '0');
+
+            return manualId + '-' + dateStr + '-' + consecutiveStr;
+        }
+
+        async function saveAndGeneratePDF() {
+            if (!validateForm()) return;
+
+            showMessage('Procesando pedido...', 'success');
+
+            try {
+                const manualId = document.getElementById('order-id').value.trim() || 'PED';
+                const consecutive = await getDailyConsecutive();
+                const orderNumber = generateOrderNumber(manualId, consecutive);
+
+                const customerName = document.getElementById('customer-name').value.trim();
+                const customerPhone = document.getElementById('customer-phone').value.trim();
+                const businessName = document.getElementById('business-name').value.trim();
+                const customerAddress = document.getElementById('customer-address').value.trim();
+                const customerNit = document.getElementById('customer-nit').value.trim();
+
+                const productsData = getProductsData();
+                const subtotalValue = parseFloat(document.getElementById('subtotal-display').textContent.replace('Q ', ''));
+                const totalValue = parseFloat(document.getElementById('total-display').textContent.replace('Q ', ''));
+
+                const orderData = {
+                    order_number: orderNumber,
+                    customer_name: customerName,
+                    business_name: businessName,
+                    customer_nit: customerNit,
+                    customer_address: customerAddress,
+                    currency: 'Quetzales',
+                    items: productsData.products,
+                    subtotal: subtotalValue,
+                    total: totalValue,
+                    codigo_products: productsData.codigos.join(', ')
+                };
+
+                const { data, error } = await supabaseClient
+                    .from('Pedidos')
+                    .insert([orderData])
+                    .select();
+
+                if (error) throw error;
+
+                showMessage('¡Pedido guardado exitosamente!', 'success');
+
+                await generatePDF(orderNumber, customerName, customerPhone, businessName, customerAddress, customerNit, productsData.products, subtotalValue, totalValue);
+
+                setTimeout(function() {
+                    clearForm();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error guardando pedido:', error);
+                showMessage('Error al guardar el pedido: ' + error.message, 'error');
+            }
+        }
+
+        async function generatePDF(orderNumber, customerName, customerPhone, businessName, customerAddress, customerNit, products, subtotal, total) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.text(COMPANY_NAME, 105, 20, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            doc.text(COMPANY_ADDRESS, 105, 27, { align: 'center' });
+            doc.text('Tel: ' + COMPANY_PHONE, 105, 32, { align: 'center' });
+
+            doc.setLineWidth(0.5);
+            doc.line(20, 37, 190, 37);
+
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('PEDIDO N°: ' + orderNumber, 20, 45);
+
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const today = new Date();
+            doc.text('Fecha: ' + formatDate(today), 20, 52);
+
+            doc.setFont(undefined, 'bold');
+            doc.text('INFORMACIÓN DEL CLIENTE', 20, 62);
+            doc.setFont(undefined, 'normal');
+            doc.text('Nombre: ' + customerName, 20, 69);
+            doc.text('Teléfono: ' + customerPhone, 20, 76);
+            doc.text('Negocio: ' + businessName, 20, 83);
+            doc.text('Dirección: ' + customerAddress, 20, 90);
+            doc.text('NIT: ' + customerNit, 20, 97);
+
+            doc.setFont(undefined, 'bold');
+            doc.text('DETALLE DE PRODUCTOS', 20, 110);
+
+            let yPos = 120;
+            doc.setFillColor(102, 126, 234);
+            doc.rect(20, yPos - 7, 170, 8, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.text('Código', 22, yPos - 2);
+            doc.text('Producto', 50, yPos - 2);
+            doc.text('Cant.', 120, yPos - 2);
+            doc.text('Precio Unit.', 140, yPos - 2);
+            doc.text('Total', 170, yPos - 2);
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFont(undefined, 'normal');
+            yPos += 8;
+
+            products.forEach(function(product) {
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                doc.text(product.codigo || '', 22, yPos);
+                const productName = product.nombre.length > 35 ? product.nombre.substring(0, 35) + '...' : product.nombre;
+                doc.text(productName, 50, yPos);
+                doc.text(String(product.cantidad), 120, yPos);
+                doc.text('Q ' + product.precio_unitario.toFixed(2), 140, yPos);
+                doc.text('Q ' + product.total.toFixed(2), 170, yPos);
+
+                yPos += 7;
+            });
+
+            yPos += 5;
+            doc.setLineWidth(0.3);
+            doc.line(20, yPos, 190, yPos);
+
+            yPos += 8;
+            doc.setFont(undefined, 'bold');
+            doc.text('Subtotal:', 140, yPos);
+            doc.text('Q ' + subtotal.toFixed(2), 170, yPos);
+
+            yPos += 8;
+            doc.setFontSize(11);
+            doc.text('TOTAL:', 140, yPos);
+            doc.text('Q ' + total.toFixed(2), 170, yPos);
+
+            const fileName = businessName.replace(/[^a-z0-9]/gi, '_') + '_' + orderNumber + '.pdf';
+            doc.save(fileName);
+        }
+
+        function clearForm() {
+            document.getElementById('order-id').value = 'PED';
+            document.getElementById('customer-name').value = '';
+            document.getElementById('customer-phone').value = '';
+            document.getElementById('business-name').value = '';
+            document.getElementById('customer-address').value = '';
+            document.getElementById('customer-nit').value = '';
+
+            document.getElementById('products-body').innerHTML = '';
+            productCounter = 0;
+            addProductRow();
+            addProductRow();
+            addProductRow();
+
+            calculateTotals();
+            setCurrentDate();
+            showMessage('Formulario limpiado correctamente', 'success');
+        }
+
+        async function loadHistory() {
+            const loadingDiv = document.getElementById('history-loading');
+            const contentDiv = document.getElementById('history-content');
+            const tbody = document.getElementById('history-body');
+
+            loadingDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Pedidos')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (data && data.length > 0) {
+                    data.forEach(function(order) {
+                        const row = document.createElement('tr');
+                        
+                        const createdDate = order.created_at ? new Date(order.created_at) : new Date();
+                        const dateStr = formatDate(createdDate);
+
+                        row.innerHTML = '<td>' + order.order_number + '</td>' +
+                            '<td>' + dateStr + '</td>' +
+                            '<td>' + order.customer_name + '</td>' +
+                            '<td>' + order.business_name + '</td>' +
+                            '<td>Q ' + parseFloat(order.total).toFixed(2) + '</td>' +
+                            '<td><button class="btn btn-primary" onclick="viewOrderDetails(\'' + order.order_number + '\')">Ver Detalles</button></td>';
+
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">No hay pedidos registrados</td></tr>';
+                }
+
+                loadingDiv.style.display = 'none';
+                contentDiv.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error cargando historial:', error);
+                loadingDiv.innerHTML = '<div style="color: #f56565;">Error al cargar el historial: ' + error.message + '</div>';
+            }
+        }
+
+        async function viewOrderDetails(orderNumber) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Pedidos')
+                    .select('*')
+                    .eq('order_number', orderNumber)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    await regeneratePDF(data);
+                }
+
+            } catch (error) {
+                console.error('Error obteniendo detalles:', error);
+                alert('Error al obtener los detalles del pedido');
+            }
+        }
+
+        async function regeneratePDF(orderData) {
+            const products = orderData.items || [];
+            
+            await generatePDF(
+                orderData.order_number,
+                orderData.customer_name,
+                '',
+                orderData.business_name,
+                orderData.customer_address || '',
+                orderData.customer_nit || '',
+                products,
+                parseFloat(orderData.subtotal),
+                parseFloat(orderData.total)
+            );
+        }
+
+        window.onload = initializeApp;
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c7b6e8295d0b0bf',t:'MTc3MDA1MzU4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
