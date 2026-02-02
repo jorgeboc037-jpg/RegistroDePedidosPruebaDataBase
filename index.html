@@ -372,6 +372,14 @@
   <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
  </head>
  <body>
+  <div id="login">
+  <h2>Iniciar sesión</h2>
+  <input id="loginEmail" placeholder="Email">
+  <input id="loginPassword" type="password" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
+</div>
+
+<div id="app" style="display:none">
   <div class="container">
    <div class="header">
     <h1>🏢 Importadora Kairos</h1>
@@ -466,6 +474,25 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5YWF3em9keHR2Y2Z2eHBoa2dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzkyNTUsImV4cCI6MjA4NTM1NTI1NX0.bP3opRjM4639oAa3X0xoGh5i86r1mtRmq_wQ2s_dv0w';
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+   
+   async function checkSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      document.getElementById("login").style.display = "block";
+      document.getElementById("app").style.display = "none";
+    } else {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+    }
+  }
+
+  checkSession();
+   async function logout() {
+  await supabase.auth.signOut();
+  location.reload();
+}
+
 
         const COMPANY_NAME = 'Importadora Kairos';
         const COMPANY_ADDRESS = 'Local 54, Plaza Atanasio Tzul, Zona 12';
@@ -918,4 +945,5 @@
         window.onload = initializeApp;
     </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c7b6e8295d0b0bf',t:'MTc3MDA1MzU4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
 </html>
